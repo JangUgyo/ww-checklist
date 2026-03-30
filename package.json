@@ -5,9 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win",
-    "dist:mac": "electron-builder --mac",
-    "dist:linux": "electron-builder --linux"
+    "dist": "electron-builder --win"
   },
   "author": "",
   "license": "MIT",
@@ -17,7 +15,7 @@
   },
   "build": {
     "appId": "com.wutheringwaves.checklist",
-    "productName": "명조 체크리스트",
+    "productName": "WW-Checklist",
     "directories": {
       "output": "dist"
     },
@@ -35,14 +33,11 @@
           "arch": ["x64"]
         }
       ],
-      "icon": "build/icon.png"
+      "icon": "build/icon.ico"
     },
     "nsis": {
       "oneClick": true,
-      "allowToChangeInstallationDirectory": false,
-      "installerIcon": "build/icon.png",
-      "uninstallerIcon": "build/icon.png",
-      "installerHeaderIcon": "build/icon.png"
+      "allowToChangeInstallationDirectory": false
     },
     "portable": {
       "artifactName": "WW-Checklist-Portable.exe"
