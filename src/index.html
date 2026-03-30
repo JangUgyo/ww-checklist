@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>명조 체크리스트</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', 'Noto Sans KR', -apple-system, sans-serif; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(175deg, #050a14 0%, #081428 35%, #0a1d3a 65%, #060e1e 100%);
+      color: #dce8ff;
+      overflow-x: hidden;
+      user-select: none;
+    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(58,210,255,0.12); border-radius: 3px; }
+
+    .bg-orb { position: fixed; border-radius: 50%; pointer-events: none; }
+    .bg-orb-1 { top: -25%; right: -15%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(58,210,255,0.03) 0%, transparent 70%); }
+    .bg-orb-2 { bottom: -20%; left: -10%; width: 450px; height: 450px; background: radial-gradient(circle, rgba(26,106,223,0.03) 0%, transparent 70%); }
+    .bg-orb-3 { top: 40%; left: 60%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(167,139,250,0.02) 0%, transparent 70%); }
+
+    .container { max-width: 480px; margin: 0 auto; padding: 24px 16px 40px; }
+
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .header-icon { width: 44px; height: 44px; border-radius: 12px; border: 2px solid rgba(58,210,255,0.2); box-shadow: 0 4px 16px rgba(58,210,255,0.15); }
+    .header-title { font-size: 20px; font-weight: 800; background: linear-gradient(135deg, #b8d8ff, #3ad2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-sub { font-size: 11px; color: rgba(140,180,230,0.35); letter-spacing: 1.5px; }
+
+    .status-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; margin-bottom: 14px;
+      background: rgba(58,210,255,0.03); border-radius: 12px; border: 1px solid rgba(58,210,255,0.06);
+    }
+    .status-label { font-size: 11px; color: rgba(140,180,230,0.4); margin-bottom: 2px; }
+    .status-number { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #3ad2ff, #82e8ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .status-total { font-size: 14px; color: rgba(140,180,230,0.3); }
+    .status-mini { text-align: center; }
+    .status-mini-num { font-size: 16px; font-weight: 700; }
+    .status-mini-label { font-size: 10px; color: rgba(140,180,230,0.35); margin-top: 1px; }
+
+    .tabs { display: flex; gap: 4px; padding: 3px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid rgba(80,130,200,0.05); margin-bottom: 14px; }
+    .tab-btn {
+      flex: 1; padding: 9px 0; border-radius: 8px; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: all 0.3s ease; background: transparent; color: rgba(140,180,230,0.35);
+    }
+    .tab-btn.active { box-shadow: 0 2px 12px rgba(58,210,255,0.08); }
+
+    .section {
+      background: rgba(6,12,26,0.7); backdrop-filter: blur(24px);
+      border-radius: 14px; border: 1px solid rgba(80,130,200,0.06); overflow: hidden;
+    }
+    .section-header { padding: 16px 18px; cursor: pointer; }
+    .section-header.open { border-bottom: 1px solid rgba(80,130,200,0.04); }
+    .section-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .section-title { font-size: 15px; font-weight: 800; letter-spacing: 0.3px; }
+    .section-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+    .section-timer { font-size: 11px; color: rgba(140,180,230,0.4); }
+    .section-sub { font-size: 11px; color: rgba(140,180,230,0.35); margin-top: 6px; }
+    .section-chevron { transition: transform 0.3s ease; }
+    .section-chevron.collapsed { transform: rotate(-90deg); }
+
+    .progress-bar { width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.04); overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 2px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    .task-list { padding: 6px 10px 10px; }
+
+    .task-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; margin-bottom: 4px;
+      border-radius: 10px; cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative; overflow: hidden;
+    }
+    .task-item.unchecked { background: rgba(12,20,40,0.5); border: 1px solid rgba(100,140,200,0.08); }
+    .task-item.checked { background: linear-gradient(135deg, rgba(58,210,255,0.08), rgba(20,80,140,0.06)); border: 1px solid rgba(58,210,255,0.2); opacity: 0.65; }
+    .task-item.just-completed { transform: scale(1.02); box-shadow: 0 0 20px rgba(58,210,255,0.3), inset 0 0 20px rgba(58,210,255,0.05); }
+
+    .task-accent { position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: linear-gradient(180deg, #3ad2ff, #1a5a9e); }
+
+    .task-checkbox {
+      width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;
+    }
+    .task-checkbox.unchecked { border: 2px solid rgba(100,150,220,0.2); background: transparent; }
+    .task-checkbox.checked { border: 2px solid #3ad2ff; background: rgba(58,210,255,0.15); }
+
+    .task-icon { font-size: 16px; flex-shrink: 0; }
+    .task-label { flex: 1; font-size: 13.5px; transition: all 0.3s ease; }
+    .task-label.unchecked { color: rgba(180,210,245,0.88); }
+    .task-label.checked { color: rgba(140,200,255,0.4); text-decoration: line-through; }
+
+    .task-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .task-actions button { background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 14px; }
+
+    .counter {
+      display: flex; align-items: center; gap: 2px; padding: 3px 8px;
+      border-radius: 7px; background: rgba(58,210,255,0.06); border: 1px solid rgba(58,210,255,0.12);
+    }
+    .counter button { background: none; border: none; color: #3ad2ff; font-size: 15px; cursor: pointer; padding: 0 3px; }
+    .counter span { font-size: 12px; font-weight: 700; min-width: 38px; text-align: center; }
+
+    .tip-box {
+      margin: 4px 0 4px 32px; padding: 10px 14px; border-radius: 8px;
+      background: rgba(58,210,255,0.04); border: 1px solid rgba(58,210,255,0.1);
+      font-size: 12px; color: rgba(160,200,240,0.7); line-height: 1.6;
+    }
+
+    .note-box {
+      margin: 4px 0 4px 32px;
+    }
+    .note-box textarea {
+      width: 100%; min-height: 50px; padding: 10px 12px; border-radius: 8px;
+      background: rgba(12,20,40,0.7); border: 1px solid rgba(100,150,220,0.12);
+      color: rgba(200,220,250,0.85); font-size: 12px; resize: vertical;
+      outline: none; font-family: inherit;
+    }
+    .note-box textarea:focus { border-color: rgba(58,210,255,0.3); }
+
+    .reset-area { margin-top: 14px; display: flex; justify-content: center; gap: 6px; align-items: center; }
+    .btn-reset {
+      padding: 8px 20px; border-radius: 8px; font-size: 12px; cursor: pointer; font-family: inherit;
+      border: 1px solid rgba(248,113,113,0.12); background: rgba(248,113,113,0.04); color: rgba(248,150,150,0.5);
+    }
+    .btn-confirm { padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(248,113,113,0.25); background: rgba(248,113,113,0.1); color: #f87171; font-size: 12px; cursor: pointer; }
+    .btn-cancel { padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); color: rgba(140,180,230,0.4); font-size: 12px; cursor: pointer; }
+
+    @keyframes pulse-glow {
+      0% { box-shadow: 0 0 20px rgba(58,210,255,0.3), inset 0 0 20px rgba(58,210,255,0.05); transform: scale(1.02); }
+      100% { box-shadow: none; transform: scale(1); }
+    }
+    .animate-complete { animation: pulse-glow 0.8s ease-out forwards; }
+  </style>
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="bg-orb bg-orb-3"></div>
+
+  <div class="container" id="app"></div>
+
+  <script>
+    // ========== DATA ==========
+    const APP_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAC0ElEQVR4Aa1XA5AkQRDsne9n27Zt24telezbtu3T2bZtG9+s7e6Z2Yi4qs7Onp6qzMrKGiH+U0hMsqKjo8mePcYwNjHpJScn02tl6OFAmF88dRIVxB9E6OEGSk7j8OHDTHR0NIWHh9OHRJv+IfRQA8Unsl02btyILzZ9+pSFhIRwCAgIwDcXVn78SPyJBIUezqbE+H+WLFmC8/Lz8+ncuXP4Py8vj6655RYSx5f8SYReaqAT4g9C/v77b3xM2o7k58eZgKwsA0bIj8Qf5T7IIJH6PZIq8s/ff//N1Go1uXL11l0H48gFBzjCCPlxFkXsJwMTE/N5x48fo6CgIEzAsmXLSKPR0K+//AKX2LZtG4njZX+TIBGhh7Lp+DH2f9999x2eO3bsGAUGBBBMvGLlSjp+4gSpVCrafPgQb/SFEK8YaKhvwOlpaWmkUqkJZWDfnj0UGxuLOICpvYEXfyREU4H7gYa6UkqIC6L/1q1bR5WVlVRTU0N79u4lpVKJ/8fFxZEg5RMR+lIZIEokMYli415cVq9eDevKysqosKCANm/eTFlZWfhePp8vCxFC/CIhIBpKTctgrr/+epKqYOPGjYh7qApYuGgR/xdZUlxCsmVHROpT+v7JJ+noLbfQiuXL6eDBg7R69WoqLSkhGP76668nCeK1KFpBIkKfcuhYC8WEEyvfvmU71dfX09GjR/EsJSWFHn30USwBGzZswHchISFc3YSQD4k/kZSUfGbJ0uV49sMPP+A9vG/bto327t1L6enpuA4MDKT777+fGhoa6N9//sG4dyhEhByX/MqTyRQVnkJLlyyhI0eO0Llz5ygsLIxOnDhB3377LV144YX4LiwsnNxJuI0IfS7TKOoZ16UrICgoiHJzcykwMJDuvvtunJuVlYXlAb8bP24cF0ESugmCRIQeSkk0N5CbyOLFi/FdU1MTJScnY6bYzwkJCVwYS+gmCBIReshBJ8Q9iFBKYNE/S+E1kEf+D88AAAAASUVORK5CYII=";
+
+    const TIPS = {
+      d1: "활약도는 솔라리스 가이드(F2) 첫 화면에서 확인 가능. 무음구역, 응소의 영역 등으로 채울 수 있어요.",
+      d2: "결정 웨이브 플레이트 180 이상 사용하면 일일 퀘스트 클리어. 보상 수령 안 하면 플레이트 소모 없이 퀘스트 인정!",
+      d3: "임무 탭에서 연두색 일반 의뢰를 의미해요. 활약도 100 달성의 가장 빠른 방법!",
+      d4: "유니버스 채널(강화 패스)을 구매하지 않았더라도 하는 것이 이득이에요.",
+      d5: "용비늘정석은 주 2회 이상 캐서 초급 음파통 합성용으로 수급하는 걸 권장해요.",
+      d6: "낚시로 얻은 심해의 산호는 리졸리항 상점에서 각종 재료와 교환 가능!",
+      d7: "필드 잔상을 잡아 20% 확률로 에코 드랍. 필드 보스 에코 파밍은 토벌 후 보상 수령 안 해도 OK.",
+      d8: "리나시타 내 항아리/상자 파밍. 하루 최대 550개, 약 6분 소요. 아베라르도 은행에서 재화 교환 가능.",
+      w1: "솔라리스 가이드 > 주기적 도전에서 확인. 스킬레벨 6부터 필요한 재료 드랍하므로 필수!",
+      w2: "주간 리셋 컨텐츠. 이벤트 탭에서 확인 가능.",
+      w3: "데이터 스테이션에서 남은 횟수 확인. 15회 넘으면 확률로 전환되지만 2회 천장이 있어요.",
+      w4: "유니버스 채널 미구매해도 하는 게 이득. 주간 경험치 한도 12000이지만 시즌 특집은 제외.",
+      w5: "음식재료, 강화재료 등 주간 리셋 상점 아이템 구매. 리나시타 식료품/식재료 상점도 체크!",
+      w6: "일일 광석 파밍도 포함됨. 멀티로 친구 맵에서 파밍하면 재료 2배 복사 가능!",
+      m1: "4주 초기화. 잔향/울림/심연 3개 탑 구성. 심경구역 18~30별 클리어를 목표로!",
+      m2: "4주 초기화. 재생 해역 7~12번이 주기적 컨텐츠. 약탈자·선장의 인장 활용하면 높은 층도 공략 가능.",
+      m3: "보스러쉬형 신규 주기 도전 컨텐츠. 역경의 탑과 별개로 진행.",
+    };
+
+    const TASKS = {
+      daily: [
+        { id: "d1", label: "솔라리스 가이드 활약도 100 달성", icon: "⚡" },
+        { id: "d2", label: "결정 웨이브 플레이트 소모 (180+)", icon: "🔋" },
+        { id: "d3", label: "일반 의뢰 클리어", icon: "📋" },
+        { id: "d4", label: "선약 방송국 아침 방송 완료", icon: "📡" },
+        { id: "d5", label: "광석 캐기 (용비늘정석 등)", icon: "⛏️" },
+        { id: "d6", label: "낚시", icon: "🎣" },
+        { id: "d7", label: "에코런 / 필드런", icon: "👾" },
+        { id: "d8", label: "모네 파밍 (리나시타)", icon: "💰" },
+      ],
+      weekly: [
+        { id: "w1", label: "군가의 중주 (3회)", icon: "⚔️", max: 3 },
+        { id: "w2", label: "수많은 문의 환상 4000pt", icon: "🌀" },
+        { id: "w3", label: "강화 흡수 15회", icon: "🔮", max: 15 },
+        { id: "w4", label: "선약 방송국 주간 방송 완료", icon: "📺" },
+        { id: "w5", label: "상점 주간 재료 구매", icon: "🛒" },
+        { id: "w6", label: "주간 채집 30개", icon: "🌿", max: 30 },
+      ],
+      monthly: [
+        { id: "m1", label: "역경의 탑 심경구역", icon: "🗼" },
+        { id: "m2", label: "바닷속 폐허 재생 해역", icon: "🌊" },
+        { id: "m3", label: "매트릭스 더블 폰스", icon: "🎯" },
+      ],
+    };
+
+    const TAB_CONFIG = {
+      daily:   { title: "일일 숙제",      sub: "매일 04:00 리셋",        c1: "#3ad2ff", c2: "#1a6adf" },
+      weekly:  { title: "주간 숙제",      sub: "매주 월요일 04:00 리셋", c1: "#a78bfa", c2: "#7c3aed" },
+      monthly: { title: "월간 정기 컨텐츠", sub: "4주 주기 리셋",         c1: "#f472b6", c2: "#db2777" },
+    };
+
+    // ========== STATE ==========
+    let state = { activeTab: 'daily', checks: {}, counts: {}, notes: {}, showReset: false, openTip: null, openNote: null };
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('ww_state');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          state.checks = parsed.checks || {};
+          state.counts = parsed.counts || {};
+          state.notes = parsed.notes || {};
+        }
+      } catch(e) {}
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('ww_state', JSON.stringify({
+          checks: state.checks, counts: state.counts, notes: state.notes,
+        }));
+      } catch(e) {}
+    }
+
+    // ========== TIMER ==========
+    function getResetTime(type) {
+      const now = new Date();
+      const reset = new Date(now);
+      if (type === 'daily') {
+        reset.setHours(4,0,0,0);
+        if (now >= reset) reset.setDate(reset.getDate() + 1);
+      } else if (type === 'weekly') {
+        reset.setHours(4,0,0,0);
+        const day = reset.getDay();
+        const until = day === 0 ? 1 : day === 1 && now < reset ? 0 : 8 - day;
+        reset.setDate(reset.getDate() + until);
+      } else {
+        reset.setHours(4,0,0,0);
+        reset.setDate(reset.getDate() + 28 - ((Math.floor((now - new Date(2024,0,1)) / 86400000)) % 28));
+      }
+      return reset;
+    }
+
+    function fmtTime(ms) {
+      if (ms <= 0) return "리셋 완료!";
+      const h = Math.floor(ms / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      const s = Math.floor((ms % 60000) / 1000);
+      if (h >= 24) return `${Math.floor(h/24)}일 ${h%24}시간`;
+      return `${h}시간 ${m}분 ${s}초`;
+    }
+
+    // ========== HELPERS ==========
+    function isComplete(task) {
+      if (task.max && task.max > 1) return (state.counts[task.id] || 0) >= task.max;
+      return !!state.checks[task.id];
+    }
+
+    function countDone(type) {
+      return TASKS[type].filter(isComplete).length;
+    }
+
+    // ========== RENDER ==========
+    function render() {
+      const app = document.getElementById('app');
+      const tab = state.activeTab;
+      const cfg = TAB_CONFIG[tab];
+      const tasks = TASKS[tab];
+      const done = countDone(tab);
+      const totalD = countDone('daily'), totalW = countDone('weekly'), totalM = countDone('monthly');
+      const totalAll = TASKS.daily.length + TASKS.weekly.length + TASKS.monthly.length;
+      const totalDone = totalD + totalW + totalM;
+
+      const tabs = [
+        { key: 'daily', label: '일일', done: totalD, total: TASKS.daily.length, c: '#3ad2ff' },
+        { key: 'weekly', label: '주간', done: totalW, total: TASKS.weekly.length, c: '#a78bfa' },
+        { key: 'monthly', label: '월간', done: totalM, total: TASKS.monthly.length, c: '#f472b6' },
+      ];
+
+      const timerMs = getResetTime(tab) - new Date();
+
+      app.innerHTML = `
+        <div class="header">
+          <img src="${APP_ICON}" class="header-icon" alt="icon">
+          <div>
+            <div class="header-title">명조 체크리스트</div>
+            <div class="header-sub">WUTHERING WAVES TRACKER</div>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <div>
+            <div class="status-label">전체 진행률</div>
+            <div><span class="status-number">${totalDone}</span> <span class="status-total">/ ${totalAll}</span></div>
+          </div>
+          <div style="display:flex;gap:14px">
+            ${tabs.map(t => `<div class="status-mini"><div class="status-mini-num" style="color:${t.c}">${t.done}/${t.total}</div><div class="status-mini-label">${t.label}</div></div>`).join('')}
+          </div>
+        </div>
+
+        <div class="tabs">
+          ${tabs.map(t => `<button class="tab-btn ${t.key === tab ? 'active' : ''}" onclick="switchTab('${t.key}')"
+            style="${t.key === tab ? `background:linear-gradient(135deg,${t.c}18,${t.c}08);color:${t.c}` : ''}"
+          >${t.label}${t.done === t.total && t.total > 0 ? ' ✓' : ''}</button>`).join('')}
+        </div>
+
+        <div class="section">
+          <div class="section-header open" onclick="toggleSection()">
+            <div class="section-title-row">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="section-title" style="color:${cfg.c1}">${cfg.title}</span>
+                <span class="section-badge" style="color:${cfg.c1};background:${cfg.c1}10">${done}/${tasks.length}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="section-timer">⏱ ${fmtTime(timerMs)}</span>
+              </div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${tasks.length ? (done/tasks.length)*100 : 0}%;background:linear-gradient(90deg,${cfg.c1},${cfg.c2});${done > 0 ? `box-shadow:0 0 8px ${cfg.c1}40` : ''}"></div></div>
+            <div class="section-sub">${cfg.sub}</div>
+          </div>
+          <div class="task-list">
+            ${tasks.map(t => renderTask(t)).join('')}
+          </div>
+        </div>
+
+        <div class="reset-area">
+          ${!state.showReset
+            ? `<button class="btn-reset" onclick="state.showReset=true;render()">🔄 현재 탭 초기화</button>`
+            : `<span style="font-size:12px;color:rgba(248,150,150,0.6)">초기화할까요?</span>
+               <button class="btn-confirm" onclick="resetTab()">확인</button>
+               <button class="btn-cancel" onclick="state.showReset=false;render()">취소</button>`
+          }
+        </div>
+      `;
+    }
+
+    function renderTask(task) {
+      const done = isComplete(task);
+      const hasCounter = task.max && task.max > 1;
+      const count = state.counts[task.id] || 0;
+      const note = state.notes[task.id] || '';
+      const hasTip = !!TIPS[task.id];
+
+      return `
+        <div style="margin-bottom:4px">
+          <div class="task-item ${done ? 'checked' : 'unchecked'}" onclick="toggleTask('${task.id}', ${task.max || 0})">
+            ${done ? '<div class="task-accent"></div>' : ''}
+            <div class="task-checkbox ${done ? 'checked' : 'unchecked'}">
+              ${done ? '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="#3ad2ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+            </div>
+            <span class="task-icon">${task.icon}</span>
+            <span class="task-label ${done ? 'checked' : 'unchecked'}">${task.label}</span>
+            <div class="task-actions">
+              ${hasTip ? `<button onclick="event.stopPropagation();toggleTip('${task.id}')" style="opacity:${state.openTip === task.id ? 0.8 : 0.4}">💡</button>` : ''}
+              <button onclick="event.stopPropagation();toggleNote('${task.id}')" style="opacity:${note || state.openNote === task.id ? 0.8 : 0.3}">📝</button>
+            </div>
+            ${hasCounter ? `
+              <div class="counter" onclick="event.stopPropagation()">
+                <button onclick="adjCount('${task.id}', -1, ${task.max})">−</button>
+                <span style="color:${done ? '#3ad2ff' : 'rgba(180,210,245,0.7)'}">${count}/${task.max}</span>
+                <button onclick="adjCount('${task.id}', 1, ${task.max})">+</button>
+              </div>
+            ` : ''}
+          </div>
+          ${state.openTip === task.id && TIPS[task.id] ? `<div class="tip-box">💡 ${TIPS[task.id]}</div>` : ''}
+          ${state.openNote === task.id ? `<div class="note-box"><textarea placeholder="메모를 입력하세요..." oninput="updateNote('${task.id}', this.value)" onclick="event.stopPropagation()">${note}</textarea></div>` : ''}
+        </div>
+      `;
+    }
+
+    // ========== ACTIONS ==========
+    function switchTab(tab) { state.activeTab = tab; state.showReset = false; state.openTip = null; state.openNote = null; render(); }
+
+    function toggleTask(id, max) {
+      if (max > 1) {
+        const cur = state.counts[id] || 0;
+        state.counts[id] = cur + 1 > max ? 0 : cur + 1;
+      } else {
+        state.checks[id] = !state.checks[id];
+      }
+      saveState(); render();
+    }
+
+    function adjCount(id, delta, max) {
+      const cur = state.counts[id] || 0;
+      state.counts[id] = Math.max(0, Math.min(max, cur + delta));
+      saveState(); render();
+    }
+
+    function toggleTip(id) { state.openTip = state.openTip === id ? null : id; state.openNote = null; render(); }
+    function toggleNote(id) { state.openNote = state.openNote === id ? null : id; state.openTip = null; render(); }
+    function updateNote(id, val) { state.notes[id] = val; saveState(); }
+
+    function toggleSection() { /* keep open for now */ }
+
+    function resetTab() {
+      TASKS[state.activeTab].forEach(t => { delete state.checks[t.id]; delete state.counts[t.id]; });
+      state.showReset = false; saveState(); render();
+    }
+
+    // ========== INIT ==========
+    loadState();
+    render();
+    setInterval(render, 1000); // update timer
+  </script>
+</body>
+</html>
